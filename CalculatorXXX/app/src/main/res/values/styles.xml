@@ -2,15 +2,25 @@
 <resources>
 
     <style name="standard_last_in_row_button">
-        <item name="android:layout_width">73dp</item>
-        <item name="android:layout_height">78dp</item>
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="cornerRadius">9dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:insetRight">0dp</item>
+        <item name="android:insetLeft">0dp</item>
         <item name="android:backgroundTint">@color/standard_button_background_color</item>
     </style>
 
     <style name="standard_button_style">
-        <item name="android:layout_width">73dp</item>
-        <item name="android:layout_height">78dp</item>
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">match_parent</item>
         <item name="android:layout_marginEnd">20dp</item>
+        <item name="cornerRadius">9dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:insetRight">0dp</item>
+        <item name="android:insetLeft">0dp</item>
         <item name="android:backgroundTint">@color/standard_button_background_color</item>
 
     </style>
@@ -21,5 +31,16 @@
         <item name="android:backgroundTint">@color/remove_button_background_color</item>
         <item name="android:textColor">@color/remove_button_text_color</item>
 
+    </style>
+
+    <style name="row_linear_layout_style">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">0dp</item>
+
+        <item name="android:gravity">center</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:padding">0dp</item>
+        <item name="android:layout_marginBottom">20dp</item>
     </style>
 </resources>
