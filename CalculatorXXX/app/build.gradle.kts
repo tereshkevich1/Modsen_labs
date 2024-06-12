@@ -7,7 +7,7 @@ android {
     namespace = "com.example.calculatorxxx"
     compileSdk = 34
 
-    dataBinding{
+    dataBinding {
         enable = true
     }
 

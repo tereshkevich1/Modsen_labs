@@ -12,9 +12,6 @@
     <string name="zero">0</string>
     <string name="comma">.</string>
     <string name="clear">С</string>
-    <string name="pow">pow</string>
-    <string name="pow_string">^</string>
-    <string name="sqr">sqr</string>
     <string name="multiply">multiply</string>
     <string name="multiply_string">×</string>
     <string name="divide">divide</string>

@@ -108,6 +108,7 @@
                     android:id="@+id/percent_button"
                     style="@style/standard_button_style"
                     android:layout_weight="1"
+                    android:tag="@string/percent"
                     android:text="@string/percent"
                     android:textColor="@color/operation_icon_color" />
 
@@ -115,6 +116,7 @@
                     android:id="@+id/divide_button"
                     style="@style/operation_with_icon_button_style"
                     android:layout_weight="1"
+                    android:tag="@string/divide_string"
                     android:text=""
                     app:icon="@drawable/divide"
                     app:iconSize="30dp" />
@@ -147,6 +149,7 @@
                     android:id="@+id/multiply_button"
                     style="@style/operation_with_icon_button_style"
                     android:layout_weight="1"
+                    android:tag="@string/multiply_string"
                     android:text=""
                     app:icon="@drawable/baseline_multiply_24"
                     app:iconSize="25dp" />
@@ -179,10 +182,10 @@
                     android:id="@+id/minus_button"
                     style="@style/operation_with_icon_button_style"
                     android:layout_weight="1"
-                    app:icon="@drawable/baseline_remove_24"
-                    app:iconSize="25dp"
+                    android:tag="@string/minus_string"
                     android:text=""
-                    android:tag="@string/minus_string"/>
+                    app:icon="@drawable/baseline_remove_24"
+                    app:iconSize="25dp" />
             </LinearLayout>
 
             <LinearLayout style="@style/row_linear_layout_style">
@@ -227,9 +230,10 @@
                     android:text="@string/zero" />
 
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/s"
+                    android:id="@+id/comma_button"
                     style="@style/standard_button_style"
                     android:layout_weight="1"
+                    android:tag="@string/comma"
                     android:text="@string/comma" />
 
 
