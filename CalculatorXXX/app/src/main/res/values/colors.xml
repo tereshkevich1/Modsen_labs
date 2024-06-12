@@ -5,4 +5,6 @@
     <color name="standard_button_background_color">#343434</color>
     <color name="remove_button_background_color">#FF5959</color>
     <color name="remove_button_text_color">#343434</color>
+    <color name="equals_button_background">#66FF7F</color>
+    <color name="operation_icon_color">#66FF7F</color>
 </resources>

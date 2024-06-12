@@ -70,8 +70,8 @@
             <com.google.android.material.divider.MaterialDivider
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp" />
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="16dp" />
 
         </LinearLayout>
 
@@ -94,24 +94,30 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/remove_button"
+                    style="@style/remove_button_style"
+                    android:layout_weight="1"
+                    android:text="@string/clear" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/plus_minus_button"
                     style="@style/standard_button_style"
                     android:layout_weight="1"
                     android:text="" />
 
                 <com.google.android.material.button.MaterialButton
+                    android:id="@+id/percent_button"
                     style="@style/standard_button_style"
                     android:layout_weight="1"
-                    android:text="" />
+                    android:text="@string/percent"
+                    android:textColor="@color/operation_icon_color" />
 
                 <com.google.android.material.button.MaterialButton
-                    style="@style/standard_button_style"
+                    android:id="@+id/divide_button"
+                    style="@style/operation_with_icon_button_style"
                     android:layout_weight="1"
-                    android:text="" />
-
-                <com.google.android.material.button.MaterialButton
-                    style="@style/standard_last_in_row_button"
-                    android:layout_weight="1"
-                    android:text="" />
+                    android:text=""
+                    app:icon="@drawable/divide"
+                    app:iconSize="30dp" />
             </LinearLayout>
 
             <LinearLayout style="@style/row_linear_layout_style">
@@ -138,9 +144,12 @@
                     android:text="@string/nine" />
 
                 <com.google.android.material.button.MaterialButton
-                    style="@style/standard_last_in_row_button"
+                    android:id="@+id/multiply_button"
+                    style="@style/operation_with_icon_button_style"
                     android:layout_weight="1"
-                    android:text="" />
+                    android:text=""
+                    app:icon="@drawable/baseline_multiply_24"
+                    app:iconSize="25dp" />
             </LinearLayout>
 
             <LinearLayout style="@style/row_linear_layout_style">
@@ -167,9 +176,13 @@
                     android:text="@string/six" />
 
                 <com.google.android.material.button.MaterialButton
-                    style="@style/standard_last_in_row_button"
+                    android:id="@+id/minus_button"
+                    style="@style/operation_with_icon_button_style"
                     android:layout_weight="1"
-                    android:text="" />
+                    app:icon="@drawable/baseline_remove_24"
+                    app:iconSize="25dp"
+                    android:text=""
+                    android:tag="@string/minus_string"/>
             </LinearLayout>
 
             <LinearLayout style="@style/row_linear_layout_style">
@@ -196,9 +209,12 @@
                     android:text="@string/three" />
 
                 <com.google.android.material.button.MaterialButton
+                    android:id="@+id/plus_button"
                     style="@style/standard_last_in_row_button"
                     android:layout_weight="1"
-                    android:text="" />
+                    android:tag="@string/plus_string"
+                    android:text="@string/plus_string"
+                    android:textColor="@color/operation_icon_color" />
             </LinearLayout>
 
             <LinearLayout style="@style/row_linear_layout_style">
@@ -211,15 +227,21 @@
                     android:text="@string/zero" />
 
                 <com.google.android.material.button.MaterialButton
+                    android:id="@+id/s"
                     style="@style/standard_button_style"
                     android:layout_weight="1"
-                    android:text="" />
+                    android:text="@string/comma" />
 
 
                 <com.google.android.material.button.MaterialButton
-                    style="@style/standard_last_in_row_button"
+                    android:id="@+id/equals_button"
+                    style="@style/operation_with_icon_button_style"
                     android:layout_weight="2.2"
-                    android:text="" />
+                    android:backgroundTint="@color/equals_button_background"
+                    android:text=""
+                    app:icon="@drawable/baseline_drag_handle_24"
+                    app:iconSize="30dp"
+                    app:iconTint="@color/remove_button_text_color" />
             </LinearLayout>
 
 
