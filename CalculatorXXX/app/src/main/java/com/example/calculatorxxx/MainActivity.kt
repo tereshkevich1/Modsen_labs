@@ -102,8 +102,7 @@ class MainActivity : AppCompatActivity() {
             binding.minusButton,
             binding.plusButton,
             binding.multiplyButton,
-            binding.percentButton,
-            binding.commaButton
+            binding.percentButton
         )
 
         buttons.forEach { button ->
@@ -118,6 +117,11 @@ class MainActivity : AppCompatActivity() {
 
         binding.removeButton.setOnClickListener {
             viewModel.remove()
+        }
+
+        binding.commaButton.setOnClickListener {
+            viewModel.insertComma(binding.inputEditText.selectionStart,
+                binding.inputEditText.selectionEnd)
         }
     }
 }

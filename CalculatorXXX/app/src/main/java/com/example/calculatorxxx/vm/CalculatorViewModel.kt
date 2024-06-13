@@ -42,26 +42,6 @@ class CalculatorViewModel : ViewModel() {
 
     fun insertOperation(symbol: String, selectionStart: Int, selectionEnd: Int) {
 
-
-
-        // Cut out the selected text if it exists
-        /*
-        val selectionStartW =
-            if (currentsExpression.getOrNull(selectionStart - 1)?.let { it in "+-×÷%." } == true) {
-                selectionStart - 1
-            } else {
-                selectionStart
-            }
-
-        val selectionEndW =
-            if (currentsExpression.getOrNull(selectionEnd + 1)?.let { it in "+-×÷%." } == true) {
-                selectionEnd + 1
-            } else {
-                selectionEnd
-            }
-
-         */
-
         val currentsExpression = _expression.value ?: ""
 
         val lastChar = currentsExpression.getOrNull(cursorPosition - 1)
@@ -72,9 +52,9 @@ class CalculatorViewModel : ViewModel() {
                 val pair = updateSelectionIndices(currentsExpression, selectionStart, selectionEnd)
                 val newSelectionStart = pair.first
                 val newSelectionEnd = pair.second
-                cursorPosition = selectionStart - 1
+                cursorPosition = selectionStart
                 currentsExpression.substring(0, newSelectionStart) +
-                        (currentsExpression.substring(newSelectionEnd+1)?:"")
+                        (currentsExpression.substring(newSelectionEnd) ?: "")
             } else if (lastChar?.let { it in "+-×÷%." } == true) {
                 cursorPosition = selectionStart - 1
                 val stringBuilder = StringBuilder(currentsExpression)
@@ -90,54 +70,97 @@ class CalculatorViewModel : ViewModel() {
                 currentsExpression
             }
 
-
-
-    if (currentExpression.isNotEmpty() && cursorPosition != 0)
-    {
-
-        val newExpression = currentExpression.substring(0, cursorPosition) +
-                symbol +
-                currentExpression.substring(cursorPosition)
-
-        cursorPosition += symbol.length
-        _expression.value = newExpression
-    } else if (symbol == "-")
-    {
-
-        val newExpression = currentExpression.substring(0, cursorPosition) +
-                symbol +
-                currentExpression.substring(cursorPosition)
-
-        cursorPosition += symbol.length
-        _expression.value = newExpression
-    } else
-    {
-        _expression.value = currentExpression
+        if (currentExpression.isNotEmpty() && cursorPosition != 0 || symbol == "-") {
+            val newExpression = currentExpression.substring(
+                0,
+                cursorPosition
+            ) + symbol + currentExpression.substring(cursorPosition)
+            cursorPosition += symbol.length
+            _expression.value = newExpression
+        } else {
+            _expression.value = currentExpression
+        }
     }
 
-}
+    private fun updateSelectionIndices(
+        currentsExpression: String,
+        selectionStart: Int,
+        selectionEnd: Int
+    ): Pair<Int, Int> {
+        val selectionStartW =
+            if (currentsExpression.getOrNull(selectionStart - 1)?.let { it in "+-×÷%." } == true) {
+                selectionStart - 1
+            } else {
+                selectionStart
+            }
 
-private fun updateSelectionIndices(
-    currentsExpression: String,
-    selectionStart: Int,
-    selectionEnd: Int
-): Pair<Int, Int> {
-    val selectionStartW =
-        if (currentsExpression.getOrNull(selectionStart - 1)?.let { it in "+-×÷%." } == true) {
-            selectionStart - 1
-        } else {
-            selectionStart
+        val selectionEndW =
+            if (currentsExpression.getOrNull(selectionEnd + 1)?.let { it in "+-×÷%." } == true) {
+                selectionEnd + 1
+            } else {
+                selectionEnd
+            }
+
+        return Pair(selectionStartW, selectionEndW)
+    }
+
+    private val pattern = Regex("[+×÷^\\-]")
+
+    private fun canInsertComma(selectionStart: Int, selectionEnd: Int): Boolean {
+        val expressionValue = _expression.value ?: return false
+
+        if (selectionStart > 0 && expressionValue[selectionStart - 1].isDigit()) {
+            val isSelectionAtStringEnd = selectionEnd == expressionValue.length
+
+            return if (isSelectionAtStringEnd) {
+                val lastSegment = expressionValue.substring(0, selectionEnd).split(pattern).last()
+                !lastSegment.contains('.')
+            } else {
+                val beforeSelection = expressionValue.substring(0, selectionStart)
+                val afterSelection = expressionValue.substring(selectionEnd)
+
+                val segmentBeforeCursor = beforeSelection.split(pattern).last()
+                val segmentAfterCursor = afterSelection.split(pattern).first()
+
+                !segmentBeforeCursor.contains('.') && !segmentAfterCursor.contains('.')
+            }
+        } else if (selectionStart == 0) {
+            return !expressionValue.split(pattern).first().contains('.')
         }
 
-    val selectionEndW =
-        if (currentsExpression.getOrNull(selectionEnd + 1)?.let { it in "+-×÷%." } == true) {
-            selectionEnd + 1
-        } else {
-            selectionEnd
+        return false
+    }
+
+
+    private fun tryPutComma(selectionStart: Int, selectionEnd: Int) {
+        if (canInsertComma(selectionStart, selectionEnd)) {
+            val expressionValue = _expression.value ?: return
+
+            val commaOrDecimal = if (selectionStart == 0 || pattern.containsMatchIn(expressionValue[selectionStart - 1].toString())) {
+                "0."
+            } else {
+                "."
+            }
+
+            val newExpression = expressionValue.substring(0, selectionStart) +
+                    commaOrDecimal + expressionValue.substring(selectionStart)
+
+            val newPosition = selectionStart + commaOrDecimal.length
+            cursorPosition = newPosition
+
+            _expression.value = newExpression
+
         }
-
-    return Pair(selectionStartW, selectionEndW)
-}
+    }
 
 
+
+    fun insertComma(selectionStart: Int, selectionEnd: Int) {
+        if (_expression.value.isNullOrEmpty()) {
+            insert("0.")
+        } else {
+            tryPutComma(selectionStart, selectionEnd)
+        }
+    }
+    
 }
