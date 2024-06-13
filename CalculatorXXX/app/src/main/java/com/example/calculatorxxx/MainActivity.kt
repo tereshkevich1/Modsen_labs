@@ -68,7 +68,6 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-
     private fun setUpDigitButtons() {
         val buttons = listOf(
             binding.buttonZero,
@@ -109,7 +108,11 @@ class MainActivity : AppCompatActivity() {
 
         buttons.forEach { button ->
             button.setOnClickListener {
-                viewModel.insertOperation(button.tag.toString())
+                viewModel.insertOperation(
+                    button.tag.toString(),
+                    binding.inputEditText.selectionStart,
+                    binding.inputEditText.selectionEnd
+                )
             }
         }
 

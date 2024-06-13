@@ -40,52 +40,104 @@ class CalculatorViewModel : ViewModel() {
         cursorPosition = newPosition.coerceIn(0, newExpression.length)
     }
 
-    fun insertOperation(symbol: String) {
-        val currentExpression = _expression.value ?: ""
-        val lastChar = currentExpression.getOrNull(cursorPosition - 1)
-        val nextChar = currentExpression.getOrNull(cursorPosition)
+    fun insertOperation(symbol: String, selectionStart: Int, selectionEnd: Int) {
 
-        val isOperator = { char: Char? -> char?.let { it in "+-×÷%." } ?: false }
-        val isNegativeFirstPosition = (cursorPosition == 0 && nextChar == '-')
-        val isNegativeSecondPosition = (cursorPosition == 1 && lastChar == '-')
 
-        // If the last character is an operator, REPLACE it
-        if (isOperator(lastChar) && !isNegativeSecondPosition) {
 
-            val newExpression = currentExpression.substring(0, cursorPosition - 1) +
-                    symbol +
-                    currentExpression.substring(cursorPosition)
-            _expression.value = newExpression
-        }
+        // Cut out the selected text if it exists
+        /*
+        val selectionStartW =
+            if (currentsExpression.getOrNull(selectionStart - 1)?.let { it in "+-×÷%." } == true) {
+                selectionStart - 1
+            } else {
+                selectionStart
+            }
 
-        // If the next character is an operator, REPLACE it
-        else if (isOperator(nextChar) && !isNegativeFirstPosition) {
+        val selectionEndW =
+            if (currentsExpression.getOrNull(selectionEnd + 1)?.let { it in "+-×÷%." } == true) {
+                selectionEnd + 1
+            } else {
+                selectionEnd
+            }
 
-            val newExpression = currentExpression.substring(0, cursorPosition) +
-                    symbol +
-                    currentExpression.substring(cursorPosition + 1)
+         */
 
-            cursorPosition += symbol.length
-            _expression.value = newExpression
+        val currentsExpression = _expression.value ?: ""
 
-        } else if (currentExpression.isNotEmpty() && cursorPosition != 0 && !isNegativeSecondPosition) {
+        val lastChar = currentsExpression.getOrNull(cursorPosition - 1)
+        val nextChar = currentsExpression.getOrNull(cursorPosition)
 
-            val newExpression = currentExpression.substring(0, cursorPosition) +
-                    symbol +
-                    currentExpression.substring(cursorPosition)
+        val currentExpression =
+            if (selectionStart != selectionEnd) {
+                val pair = updateSelectionIndices(currentsExpression, selectionStart, selectionEnd)
+                val newSelectionStart = pair.first
+                val newSelectionEnd = pair.second
+                cursorPosition = selectionStart - 1
+                currentsExpression.substring(0, newSelectionStart) +
+                        (currentsExpression.substring(newSelectionEnd+1)?:"")
+            } else if (lastChar?.let { it in "+-×÷%." } == true) {
+                cursorPosition = selectionStart - 1
+                val stringBuilder = StringBuilder(currentsExpression)
+                stringBuilder.deleteCharAt(cursorPosition)
+                stringBuilder.toString()
+            } else if (nextChar?.let { it in "+-×÷%." } == true) {
+                cursorPosition = selectionStart
+                val stringBuilder = StringBuilder(currentsExpression)
+                stringBuilder.deleteCharAt(cursorPosition)
+                stringBuilder.toString()
+            } else {
+                cursorPosition = selectionStart
+                currentsExpression
+            }
 
-            cursorPosition += symbol.length
-            _expression.value = newExpression
-        } else if (symbol == "-" && !isNegativeSecondPosition && !isNegativeFirstPosition) {
 
-            val newExpression = currentExpression.substring(0, cursorPosition) +
-                    symbol +
-                    currentExpression.substring(cursorPosition)
 
-            cursorPosition += symbol.length
-            _expression.value = newExpression
-        }
+    if (currentExpression.isNotEmpty() && cursorPosition != 0)
+    {
 
+        val newExpression = currentExpression.substring(0, cursorPosition) +
+                symbol +
+                currentExpression.substring(cursorPosition)
+
+        cursorPosition += symbol.length
+        _expression.value = newExpression
+    } else if (symbol == "-")
+    {
+
+        val newExpression = currentExpression.substring(0, cursorPosition) +
+                symbol +
+                currentExpression.substring(cursorPosition)
+
+        cursorPosition += symbol.length
+        _expression.value = newExpression
+    } else
+    {
+        _expression.value = currentExpression
     }
+
+}
+
+private fun updateSelectionIndices(
+    currentsExpression: String,
+    selectionStart: Int,
+    selectionEnd: Int
+): Pair<Int, Int> {
+    val selectionStartW =
+        if (currentsExpression.getOrNull(selectionStart - 1)?.let { it in "+-×÷%." } == true) {
+            selectionStart - 1
+        } else {
+            selectionStart
+        }
+
+    val selectionEndW =
+        if (currentsExpression.getOrNull(selectionEnd + 1)?.let { it in "+-×÷%." } == true) {
+            selectionEnd + 1
+        } else {
+            selectionEnd
+        }
+
+    return Pair(selectionStartW, selectionEndW)
+}
+
 
 }
