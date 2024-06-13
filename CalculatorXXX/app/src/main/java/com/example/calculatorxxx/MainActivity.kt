@@ -1,8 +1,6 @@
 package com.example.calculatorxxx
 
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.example.calculatorxxx.databinding.ActivityMainBinding
@@ -12,59 +10,57 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var viewModel: CalculatorViewModel
-    private var isUpdatingText = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         setUpViewModel()
         setUpInputEditText()
         setUpDigitButtons()
         setUpOperationButtons()
-
-        setContentView(binding.root)
     }
 
     private fun setUpViewModel() {
         viewModel = ViewModelProvider(this)[CalculatorViewModel::class.java]
 
         viewModel.expression.observe(this) { newValue ->
-            if (!isUpdatingText) {
-                isUpdatingText = true
-                binding.inputEditText.setText(newValue)
-                binding.inputEditText.setSelection(viewModel.cursorPosition)
-                isUpdatingText = false
-            }
+            binding.inputEditText.setText(newValue)
+        }
+
+        viewModel.selectionStart.observe(this) { newStart ->
+            binding.inputEditText.setSelection(newStart, binding.inputEditText.selectionEnd)
+        }
+
+        viewModel.selectionEnd.observe(this) { newEnd ->
+            binding.inputEditText.setSelection(binding.inputEditText.selectionStart, newEnd)
+        }
+
+        viewModel.currentResult.observe(this){ it ->
+            binding.resultTextView.text = it
         }
     }
 
     private fun setUpInputEditText() {
         val inputEditText = binding.inputEditText
-
         inputEditText.showSoftInputOnFocus = false
         inputEditText.requestFocus()
 
         inputEditText.setOnClickListener {
-            viewModel.updateCursorPosition(inputEditText.selectionStart)
+            viewModel.setNewSelection(
+                inputEditText.selectionStart,
+                0,
+                viewModel.expression.value!!.length
+            )
         }
 
-        inputEditText.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-            }
-
-            override fun afterTextChanged(s: Editable?) {
-                //binding.inputEditText.setSelection(viewModel.cursorPosition)
-
-                if (!isUpdatingText && s != null) {
-                    isUpdatingText = true
-                    viewModel.updateExpression(s.toString(), inputEditText.selectionStart)
-                    isUpdatingText = false
-                }
-            }
-        })
+        inputEditText.setText(viewModel.expression.value)
+        inputEditText.setSelection(
+            viewModel.selectionStart.value ?: 0,
+            viewModel.selectionEnd.value ?: 0
+        )
     }
 
 
@@ -90,7 +86,11 @@ class MainActivity : AppCompatActivity() {
 
         buttons.forEach { button ->
             button.setOnClickListener {
-                viewModel.insert(button.tag.toString())
+                viewModel.insert(
+                    button.tag.toString(),
+                    binding.inputEditText.selectionStart,
+                    binding.inputEditText.selectionEnd
+                )
             }
         }
     }
@@ -120,8 +120,14 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.commaButton.setOnClickListener {
-            viewModel.insertComma(binding.inputEditText.selectionStart,
-                binding.inputEditText.selectionEnd)
+            viewModel.insertComma(
+                binding.inputEditText.selectionStart,
+                binding.inputEditText.selectionEnd
+            )
+        }
+
+        binding.equalsButton.setOnClickListener {
+            viewModel.calculate(viewModel.expression.value.toString())
         }
     }
 }
