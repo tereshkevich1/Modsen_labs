@@ -3,11 +3,17 @@ package com.example.calculatorxxx.vm
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.example.calculatorxxx.ExpressionCalculatorModule
+import com.example.calculatorxxx.Result
 
+interface ExpressionErrorHandler {
+    fun onError(errorMessage: String)
+    fun onSuccess(result: String)
+}
 
 class CalculatorViewModel : ViewModel() {
 
-    private val _expression = MutableLiveData("-5×-5-5%-5")
+    private val _expression = MutableLiveData("")
     val expression: LiveData<String> get() = _expression
 
     private val _selectionStart = MutableLiveData(0)
@@ -18,6 +24,31 @@ class CalculatorViewModel : ViewModel() {
 
     private val _currentResult = MutableLiveData("")
     val currentResult: LiveData<String> get() = _currentResult
+
+    private val expressionCalculatorModule = ExpressionCalculatorModule()
+
+    fun calculateFromEqualsButton(listener: ExpressionErrorHandler) {
+        calculate(listener)
+        _expression.value =
+            expressionCalculatorModule.convertScientificToDecimal(currentResult.value ?: "0")
+        setNewSelection(_selectionStart.value!!, 1, expression.value!!.length)
+    }
+
+    fun calculate(listener: ExpressionErrorHandler) {
+        val expression = if (expression.value!!.isEmpty()) "0"
+        else expression.value!!.toString()
+
+        when (val result = expressionCalculatorModule.calculate(expression)) {
+            is Result.Error -> {
+                listener.onError(result.errorMessage)
+            }
+
+            is Result.Success -> {
+                _currentResult.value = result.value.toString()
+                listener.onSuccess(result.value.toString())
+            }
+        }
+    }
 
     fun setNewSelection(selectionStart: Int, length: Int, expressionLength: Int) {
         val newSelectionStart = selectionStart + length
@@ -56,41 +87,31 @@ class CalculatorViewModel : ViewModel() {
         val lastChar = currentExpression.getOrNull(selectionStart - 1)
         val nextChar = currentExpression.getOrNull(selectionEnd)
 
-        if (selectionStart == 0) {
-            return
-        }
-
         val updatedExpression = when {
-            selectionStart != selectionEnd -> {
-                val pair = updateSelectionIndices(currentExpression, selectionStart, selectionEnd)
-                val newSelectionStart = pair.first
-                val newSelectionEnd = pair.second
 
-                currentExpression.substring(0, newSelectionStart) +
-                        symbol +
-                        currentExpression.substring(newSelectionEnd)
-            }
+            // Handle selection replacement
+            selectionStart != selectionEnd -> replaceSelection(
+                currentExpression,
+                selectionStart,
+                selectionEnd,
+                symbol
+            )
 
-            lastChar?.let { it in "+-×÷%." } == true -> {
-                val stringBuilder = StringBuilder(currentExpression)
-                stringBuilder.deleteCharAt(selectionStart - 1)
-                stringBuilder.insert(selectionStart - 1, symbol)
-                stringBuilder.toString()
-            }
+            // Replace operator before the current position
+            lastChar?.let { it in "+-×÷%." } == true -> replaceCharAt(
+                currentExpression,
+                selectionStart - 1,
+                symbol
+            )
 
-            nextChar?.let { it in "+-×÷%." } == true -> {
-                val stringBuilder = StringBuilder(currentExpression)
-                stringBuilder.deleteCharAt(selectionStart)
-                stringBuilder.insert(selectionStart, symbol)
-                stringBuilder.toString()
-            }
+            // Replace operator after the current position
+            nextChar?.let { it in "+-×÷%." } == true -> replaceCharAt(
+                currentExpression,
+                selectionStart,
+                symbol
+            )
 
-            else -> {
-                currentExpression.substring(
-                    0,
-                    selectionStart
-                ) + symbol + currentExpression.substring(selectionStart)
-            }
+            else -> insertSymbol(currentExpression, selectionStart, symbol)
         }
 
         _expression.value = updatedExpression
@@ -99,9 +120,66 @@ class CalculatorViewModel : ViewModel() {
             nextChar?.let { it in "+-×÷%." } == true -> selectionStart
             else -> selectionStart
         }
-
         setNewSelection(newSelectionStart, symbol.length, updatedExpression.length)
     }
+
+    private fun replaceSelection(
+        currentExpression: String,
+        selectionStart: Int,
+        selectionEnd: Int,
+        symbol: String
+    ): String {
+        val (newSelectionStart, newSelectionEnd) = updateSelectionIndices(
+            currentExpression,
+            selectionStart,
+            selectionEnd
+        )
+        return currentExpression.substring(
+            0,
+            newSelectionStart
+        ) + symbol + currentExpression.substring(newSelectionEnd)
+    }
+
+    private fun replaceCharAt(currentExpression: String, index: Int, symbol: String): String {
+        val stringBuilder = StringBuilder(currentExpression)
+        stringBuilder.deleteCharAt(index)
+        stringBuilder.insert(index, symbol)
+        return stringBuilder.toString()
+    }
+
+    private fun insertSymbol(
+        currentExpression: String,
+        selectionStart: Int,
+        symbol: String
+    ): String {
+        return currentExpression.substring(
+            0,
+            selectionStart
+        ) + symbol + currentExpression.substring(selectionStart)
+    }
+
+
+    fun insertMinus(selectionStart: Int, selectionEnd: Int) {
+        val currentExpression = _expression.value ?: ""
+
+        val lastChar = currentExpression.getOrNull(selectionStart - 1)
+        val nextChar = currentExpression.getOrNull(selectionEnd)
+
+        val updatedExpression = when {
+            // Allow minus sign insertion after multiplication and division, but not consecutively
+            (lastChar?.let { it in "×÷" } == true || lastChar?.isDigit() ?: false) && nextChar != '-' && lastChar != '-' -> {
+                currentExpression.substring(0, selectionStart) + "-" + currentExpression.substring(
+                    selectionStart
+                )
+            }
+
+            else -> currentExpression
+        }
+
+        _expression.value = updatedExpression
+        setNewSelection(selectionStart, 1, updatedExpression.length)
+    }
+
 
     private fun updateSelectionIndices(
         currentsExpression: String,
@@ -170,97 +248,65 @@ class CalculatorViewModel : ViewModel() {
             _expression.value = newExpression
 
             setNewSelection(selectionStart, commaOrDecimal.length, expression.value!!.length)
-
-
         }
     }
 
-
     fun insertComma(selectionStart: Int, selectionEnd: Int) {
         if (_expression.value.isNullOrEmpty()) {
-             insert("0.",selectionStart, selectionEnd)
+            insert("0.", selectionStart, selectionEnd)
         } else {
             tryPutComma(selectionStart, selectionEnd)
         }
     }
 
+    fun toggleSign(selectionStart: Int, selectionEnd: Int) {
+        val currentExpression = _expression.value ?: ""
 
-    fun calculate(expression: String) {
-        val numbers = java.util.Stack<Double>()
-        val operations = java.util.Stack<Char>()
+        if (currentExpression.isEmpty()) return
 
-        var i = 0
+        val (start, end) = findNumberBounds(currentExpression, selectionStart, selectionEnd)
 
-        // Early validation for trailing operators
-        if (expression.isEmpty() || "+-×÷".contains(expression.last())) {
-            _currentResult.value = "Invalid Expression"
-            return
-        }
+        val number = currentExpression.substring(start, end)
+        val toggledNumber = if (number.startsWith("-")) {
+            number.substring(1)
+        } else "-$number"
 
-        while (i < expression.length) {
-            when {
-                expression[i].isWhitespace() -> i++
-                expression[i].isDigit() || expression[i] == '.' -> {
-                    var number = ""
-                    while (i < expression.length && (expression[i].isDigit() || expression[i] == '.')) {
-                        number += expression[i]
-                        i++
-                    }
-                    numbers.push(number.toDouble())
-                }
-                expression[i] == '-' && (i == 0 || !expression[i - 1].isDigit()) -> {
-                    // Handle negative numbers
-                    var number = "-"
-                    i++
-                    while (i < expression.length && (expression[i].isDigit() || expression[i] == '.')) {
-                        number += expression[i]
-                        i++
-                    }
-                    numbers.push(number.toDouble())
-                }
-                else -> {
-                    while (!operations.empty() && hasPrecedence(expression[i], operations.peek())) {
-                        if (numbers.size < 2) {
-                            _currentResult.value = "Invalid Expression"
-                            return
-                        }
-                        numbers.push(applyOp(operations.pop(), numbers.pop(), numbers.pop()))
-                    }
-                    operations.push(expression[i])
-                    i++
-                }
-            }
-        }
+        val updatedExpression = currentExpression.substring(0, start) +
+                toggledNumber +
+                currentExpression.substring(end)
 
-        while (!operations.empty()) {
-            if (numbers.size < 2) {
-                _currentResult.value = "Invalid Expression"
-                return
-            }
-            numbers.push(applyOp(operations.pop(), numbers.pop(), numbers.pop()))
-        }
-
-        _currentResult.value = if (numbers.isEmpty()) "Invalid Expression" else numbers.pop().toString()
+        _expression.value = updatedExpression
+        setNewSelection(start, toggledNumber.length, updatedExpression.length)
     }
 
-    private fun hasPrecedence(op1: Char, op2: Char): Boolean {
-        if (op2 == '(' || op2 == ')') return false
-        return !((op1 == '×' || op1 == '÷' || op1 == '%') && (op2 == '+' || op2 == '-'))
-    }
+    private fun findNumberBounds(
+        expression: String,
+        selectionStart: Int,
+        selectionEnd: Int
+    ): Pair<Int, Int> {
+        var start = selectionStart
+        var end = selectionEnd
 
-    private fun applyOp(op: Char, b: Double, a: Double): Double {
-        return when (op) {
-            '+' -> a + b
-            '-' -> a - b
-            '×' -> a * b
-            '÷' -> {
-                if (b == 0.0) throw UnsupportedOperationException("Cannot divide by zero")
-                a / b
-            }
-            '%' -> a * (b / 100)
-            else -> 0.0
+        // Extend selectionStart to the left to find the start of the number
+        while (start > 0 && expression[start - 1].isDigitOrDot()) {
+            start--
         }
+
+        // Extend selectionEnd to the right to find the end of the number
+        while (end < expression.length && expression[end].isDigitOrDot()) {
+            end++
+        }
+
+        // Include preceding minus sign if it exists
+        if (start > 0 && expression[start - 1] == '-') {
+            start--
+        }
+
+        return Pair(start, end)
     }
 
-
+    private fun Char.isDigitOrDot(): Boolean {
+        return this.isDigit() || this == '.'
+    }
+    
 }

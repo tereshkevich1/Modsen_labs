@@ -5,8 +5,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.example.calculatorxxx.databinding.ActivityMainBinding
 import com.example.calculatorxxx.vm.CalculatorViewModel
+import com.example.calculatorxxx.vm.ExpressionErrorHandler
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), ExpressionErrorHandler {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var viewModel: CalculatorViewModel
@@ -38,7 +39,7 @@ class MainActivity : AppCompatActivity() {
             binding.inputEditText.setSelection(binding.inputEditText.selectionStart, newEnd)
         }
 
-        viewModel.currentResult.observe(this){ it ->
+        viewModel.currentResult.observe(this) { it ->
             binding.resultTextView.text = it
         }
     }
@@ -75,13 +76,7 @@ class MainActivity : AppCompatActivity() {
             binding.buttonSix,
             binding.buttonSeven,
             binding.buttonEight,
-            binding.buttonNine,
-            binding.divideButton,
-            binding.minusButton,
-            binding.plusButton,
-            binding.multiplyButton,
-            binding.percentButton,
-            binding.commaButton
+            binding.buttonNine
         )
 
         buttons.forEach { button ->
@@ -91,6 +86,7 @@ class MainActivity : AppCompatActivity() {
                     binding.inputEditText.selectionStart,
                     binding.inputEditText.selectionEnd
                 )
+                viewModel.calculate(this)
             }
         }
     }
@@ -99,7 +95,6 @@ class MainActivity : AppCompatActivity() {
 
         val buttons = listOf(
             binding.divideButton,
-            binding.minusButton,
             binding.plusButton,
             binding.multiplyButton,
             binding.percentButton
@@ -117,6 +112,7 @@ class MainActivity : AppCompatActivity() {
 
         binding.removeButton.setOnClickListener {
             viewModel.remove()
+            viewModel.calculate(this)
         }
 
         binding.commaButton.setOnClickListener {
@@ -124,10 +120,38 @@ class MainActivity : AppCompatActivity() {
                 binding.inputEditText.selectionStart,
                 binding.inputEditText.selectionEnd
             )
+            viewModel.calculate(this)
         }
 
         binding.equalsButton.setOnClickListener {
-            viewModel.calculate(viewModel.expression.value.toString())
+            viewModel.calculateFromEqualsButton(this)
         }
+
+        binding.minusButton.setOnClickListener {
+            viewModel.insertMinus(
+                binding.inputEditText.selectionStart,
+                binding.inputEditText.selectionEnd
+            )
+        }
+
+        binding.plusMinusButton.setOnClickListener {
+            viewModel.toggleSign(
+                binding.inputEditText.selectionStart,
+                binding.inputEditText.selectionEnd
+            )
+            viewModel.calculate(this)
+        }
+    }
+
+    override fun onError(errorMessage: String) {
+        binding.inputEditText.setTextColor(getColor(R.color.remove_button_background_color))
+        binding.resultTextView.setTextColor(getColor(R.color.remove_button_background_color))
+        binding.resultTextView.text = errorMessage
+    }
+
+    override fun onSuccess(result: String) {
+        binding.inputEditText.setTextColor(getColor(R.color.white))
+        binding.resultTextView.setTextColor(getColor(R.color.result_text_color))
+        binding.resultTextView.text = result
     }
 }

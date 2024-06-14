@@ -7,4 +7,5 @@
     <color name="remove_button_text_color">#343434</color>
     <color name="equals_button_background">#66FF7F</color>
     <color name="operation_icon_color">#66FF7F</color>
+    <color name="result_text_color">#969696</color>
 </resources>
