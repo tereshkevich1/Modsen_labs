@@ -3,6 +3,7 @@ package com.example.calculatorxxx.vm
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.example.calculatorxxx.Constants
 import com.example.calculatorxxx.ExpressionCalculatorModule
 import com.example.calculatorxxx.Result
 
@@ -10,6 +11,8 @@ interface ExpressionErrorHandler {
     fun onError(errorMessage: String)
     fun onSuccess(result: String)
 }
+
+/**ViewModel for processing logic with calculator string and result of calculations**/
 
 class CalculatorViewModel : ViewModel() {
 
@@ -30,12 +33,16 @@ class CalculatorViewModel : ViewModel() {
     fun calculateFromEqualsButton(listener: ExpressionErrorHandler) {
         calculate(listener)
         _expression.value =
-            expressionCalculatorModule.convertScientificToDecimal(currentResult.value ?: "0")
-        setNewSelection(_selectionStart.value!!, 1, expression.value!!.length)
+            expressionCalculatorModule.convertScientificToDecimal(
+                currentResult.value ?: Constants.ZERO
+            )
+        val offset = if (currentResult.value == Constants.ZERO_COMMA_ZERO) 3
+        else 1
+        setNewSelection(_selectionStart.value!!, offset, expression.value!!.length)
     }
 
     fun calculate(listener: ExpressionErrorHandler) {
-        val expression = if (expression.value!!.isEmpty()) "0"
+        val expression = if (expression.value!!.isEmpty()) Constants.ZERO
         else expression.value!!.toString()
 
         when (val result = expressionCalculatorModule.calculate(expression)) {
@@ -79,6 +86,12 @@ class CalculatorViewModel : ViewModel() {
             _expression.value = newExpression
             setNewSelection(_selectionStart.value!!, 0, expression.value!!.length)
         }
+    }
+
+    fun removeAll() {
+        _expression.value = ""
+        _currentResult.value = ""
+        setNewSelection(0, 0, expression.value!!.length)
     }
 
     fun insertOperation(symbol: String, selectionStart: Int, selectionEnd: Int) {
@@ -173,13 +186,21 @@ class CalculatorViewModel : ViewModel() {
                 )
             }
 
+            ((selectionStart == 0 && !(nextChar?.let { it in "×÷+-%." } ?: false))) -> {
+                currentExpression.substring(0, selectionStart) + "-" + currentExpression.substring(
+                    selectionStart
+                )
+            }
+
             else -> currentExpression
         }
 
-        _expression.value = updatedExpression
-        setNewSelection(selectionStart, 1, updatedExpression.length)
-    }
+        if (updatedExpression != currentExpression) {
+            _expression.value = updatedExpression
+            setNewSelection(selectionStart, 1, updatedExpression.length)
+        }
 
+    }
 
     private fun updateSelectionIndices(
         currentsExpression: String,
@@ -203,8 +224,6 @@ class CalculatorViewModel : ViewModel() {
         return Pair(selectionStartW, selectionEndW)
     }
 
-    private val pattern = Regex("[+×÷^\\-]")
-
     private fun canInsertComma(selectionStart: Int, selectionEnd: Int): Boolean {
         val expressionValue = _expression.value ?: return false
 
@@ -212,34 +231,34 @@ class CalculatorViewModel : ViewModel() {
             val isSelectionAtStringEnd = selectionEnd == expressionValue.length
 
             return if (isSelectionAtStringEnd) {
-                val lastSegment = expressionValue.substring(0, selectionEnd).split(pattern).last()
+                val lastSegment =
+                    expressionValue.substring(0, selectionEnd).split(Constants.pattern).last()
                 !lastSegment.contains('.')
             } else {
                 val beforeSelection = expressionValue.substring(0, selectionStart)
                 val afterSelection = expressionValue.substring(selectionEnd)
 
-                val segmentBeforeCursor = beforeSelection.split(pattern).last()
-                val segmentAfterCursor = afterSelection.split(pattern).first()
+                val segmentBeforeCursor = beforeSelection.split(Constants.pattern).last()
+                val segmentAfterCursor = afterSelection.split(Constants.pattern).first()
 
                 !segmentBeforeCursor.contains('.') && !segmentAfterCursor.contains('.')
             }
         } else if (selectionStart == 0) {
-            return !expressionValue.split(pattern).first().contains('.')
+            return !expressionValue.split(Constants.pattern).first().contains('.')
         }
 
         return false
     }
-
 
     private fun tryPutComma(selectionStart: Int, selectionEnd: Int) {
         if (canInsertComma(selectionStart, selectionEnd)) {
             val expressionValue = _expression.value ?: return
 
             val commaOrDecimal =
-                if (selectionStart == 0 || pattern.containsMatchIn(expressionValue[selectionStart - 1].toString())) {
-                    "0."
+                if (selectionStart == 0 || Constants.pattern.containsMatchIn(expressionValue[selectionStart - 1].toString())) {
+                    Constants.ZERO_COMMA
                 } else {
-                    "."
+                    Constants.COMMA
                 }
 
             val newExpression = expressionValue.substring(0, selectionStart) +
@@ -253,7 +272,7 @@ class CalculatorViewModel : ViewModel() {
 
     fun insertComma(selectionStart: Int, selectionEnd: Int) {
         if (_expression.value.isNullOrEmpty()) {
-            insert("0.", selectionStart, selectionEnd)
+            insert(Constants.ZERO_COMMA, selectionStart, selectionEnd)
         } else {
             tryPutComma(selectionStart, selectionEnd)
         }
@@ -301,12 +320,11 @@ class CalculatorViewModel : ViewModel() {
         if (start > 0 && expression[start - 1] == '-') {
             start--
         }
-
         return Pair(start, end)
     }
 
     private fun Char.isDigitOrDot(): Boolean {
         return this.isDigit() || this == '.'
     }
-    
+
 }

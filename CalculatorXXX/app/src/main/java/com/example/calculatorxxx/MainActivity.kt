@@ -1,6 +1,9 @@
 package com.example.calculatorxxx
 
 import android.os.Bundle
+import android.widget.EditText
+import android.widget.HorizontalScrollView
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.example.calculatorxxx.databinding.ActivityMainBinding
@@ -11,32 +14,40 @@ class MainActivity : AppCompatActivity(), ExpressionErrorHandler {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var viewModel: CalculatorViewModel
+    private lateinit var inputEditText: EditText
+    private lateinit var resultTextView: TextView
+    private lateinit var scrollView: HorizontalScrollView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         binding = ActivityMainBinding.inflate(layoutInflater)
+        inputEditText = binding.inputEditText
+        resultTextView = binding.resultTextView
+        scrollView = binding.scrollView
         setContentView(binding.root)
 
         setUpViewModel()
         setUpInputEditText()
         setUpDigitButtons()
-        setUpOperationButtons()
+        setUpMathOperationButtons()
+        setUpDefaultOperationButtons()
+        setUpScrollView()
     }
 
     private fun setUpViewModel() {
         viewModel = ViewModelProvider(this)[CalculatorViewModel::class.java]
 
         viewModel.expression.observe(this) { newValue ->
-            binding.inputEditText.setText(newValue)
+            inputEditText.setText(newValue)
         }
 
         viewModel.selectionStart.observe(this) { newStart ->
-            binding.inputEditText.setSelection(newStart, binding.inputEditText.selectionEnd)
+            inputEditText.setSelection(newStart, binding.inputEditText.selectionEnd)
         }
 
         viewModel.selectionEnd.observe(this) { newEnd ->
-            binding.inputEditText.setSelection(binding.inputEditText.selectionStart, newEnd)
+            inputEditText.setSelection(binding.inputEditText.selectionStart, newEnd)
         }
 
         viewModel.currentResult.observe(this) { it ->
@@ -45,7 +56,6 @@ class MainActivity : AppCompatActivity(), ExpressionErrorHandler {
     }
 
     private fun setUpInputEditText() {
-        val inputEditText = binding.inputEditText
         inputEditText.showSoftInputOnFocus = false
         inputEditText.requestFocus()
 
@@ -64,6 +74,11 @@ class MainActivity : AppCompatActivity(), ExpressionErrorHandler {
         )
     }
 
+    private fun setUpScrollView() {
+        scrollView.post {
+            scrollView.fullScroll(HorizontalScrollView.FOCUS_RIGHT)
+        }
+    }
 
     private fun setUpDigitButtons() {
         val buttons = listOf(
@@ -91,7 +106,7 @@ class MainActivity : AppCompatActivity(), ExpressionErrorHandler {
         }
     }
 
-    private fun setUpOperationButtons() {
+    private fun setUpMathOperationButtons() {
 
         val buttons = listOf(
             binding.divideButton,
@@ -104,54 +119,67 @@ class MainActivity : AppCompatActivity(), ExpressionErrorHandler {
             button.setOnClickListener {
                 viewModel.insertOperation(
                     button.tag.toString(),
-                    binding.inputEditText.selectionStart,
-                    binding.inputEditText.selectionEnd
+                    inputEditText.selectionStart,
+                    inputEditText.selectionEnd
                 )
             }
         }
 
+        binding.minusButton.setOnClickListener {
+            viewModel.insertMinus(
+                inputEditText.selectionStart,
+                inputEditText.selectionEnd
+            )
+        }
+
+    }
+
+    private fun setUpDefaultOperationButtons(){
         binding.removeButton.setOnClickListener {
             viewModel.remove()
             viewModel.calculate(this)
         }
 
+        binding.removeButton.setOnLongClickListener {
+            viewModel.removeAll()
+            true
+        }
+
         binding.commaButton.setOnClickListener {
             viewModel.insertComma(
-                binding.inputEditText.selectionStart,
-                binding.inputEditText.selectionEnd
+                inputEditText.selectionStart,
+                inputEditText.selectionEnd
             )
             viewModel.calculate(this)
         }
 
         binding.equalsButton.setOnClickListener {
             viewModel.calculateFromEqualsButton(this)
-        }
-
-        binding.minusButton.setOnClickListener {
-            viewModel.insertMinus(
-                binding.inputEditText.selectionStart,
-                binding.inputEditText.selectionEnd
-            )
+            scrollView.post {
+                scrollView.fullScroll(HorizontalScrollView.FOCUS_LEFT)
+            }
         }
 
         binding.plusMinusButton.setOnClickListener {
             viewModel.toggleSign(
-                binding.inputEditText.selectionStart,
-                binding.inputEditText.selectionEnd
+                inputEditText.selectionStart,
+                inputEditText.selectionEnd
             )
             viewModel.calculate(this)
         }
     }
 
+
+
     override fun onError(errorMessage: String) {
-        binding.inputEditText.setTextColor(getColor(R.color.remove_button_background_color))
-        binding.resultTextView.setTextColor(getColor(R.color.remove_button_background_color))
-        binding.resultTextView.text = errorMessage
+        inputEditText.setTextColor(getColor(R.color.remove_button_background_color))
+        resultTextView.setTextColor(getColor(R.color.remove_button_background_color))
+        resultTextView.text = errorMessage
     }
 
     override fun onSuccess(result: String) {
-        binding.inputEditText.setTextColor(getColor(R.color.white))
-        binding.resultTextView.setTextColor(getColor(R.color.result_text_color))
-        binding.resultTextView.text = result
+        inputEditText.setTextColor(getColor(R.color.white))
+        resultTextView.setTextColor(getColor(R.color.result_text_color))
+        resultTextView.text = result
     }
 }

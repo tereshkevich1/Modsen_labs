@@ -8,4 +8,5 @@
     <color name="equals_button_background">#66FF7F</color>
     <color name="operation_icon_color">#66FF7F</color>
     <color name="result_text_color">#969696</color>
+    <color name="background_color">#151515</color>
 </resources>
