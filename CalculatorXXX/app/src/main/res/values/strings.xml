@@ -1,0 +1,31 @@
+<resources>
+    <string name="app_name">CalculatorXXX</string>
+    <string name="one">1</string>
+    <string name="two">2</string>
+    <string name="three">3</string>
+    <string name="four">4</string>
+    <string name="five">5</string>
+    <string name="six">6</string>
+    <string name="seven">7</string>
+    <string name="eight">8</string>
+    <string name="nine">9</string>
+    <string name="zero">0</string>
+    <string name="zero_comma">0.</string>
+    <string name="zero_comma_zero">0.0</string>
+    <string name="comma">.</string>
+    <string name="clear">С</string>
+    <string name="multiply">multiply</string>
+    <string name="multiply_string">×</string>
+    <string name="divide">divide</string>
+    <string name="divide_string">÷</string>
+    <string name="plus">plus</string>
+    <string name="plus_string">+</string>
+    <string name="minus">minus</string>
+    <string name="minus_string">-</string>
+    <string name="equals">equals</string>
+    <string name="remove">remove</string>
+    <string name="percent">%</string>
+    <string name="plus_minus">+/-</string>
+    <string name="button">open your eyes, bro.</string>
+    <string name="invalid_expression">invalid expression</string>
+</resources>
