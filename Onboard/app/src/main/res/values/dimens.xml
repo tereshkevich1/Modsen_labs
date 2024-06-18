@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="onboarding_message_column_top_padding">35dp</dimen>
+    <dimen name="onboarding_message_column_bottom_padding">38dp</dimen>
+    <dimen name="onboarding_message_column_horizontal_padding">24dp</dimen>
+    <dimen name="text_padding">12dp</dimen>
+</resources>
